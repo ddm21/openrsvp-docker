@@ -2,7 +2,7 @@
 
 This repository contains everything you need to deploy **OpenRSVP**—the ultimate self-hosted event management and RSVP platform—using Docker.
 
-![OpenRSVP Dashboard Preview](https://licence-validator.korex.ovh/main-screen.webp)
+![OpenRSVP Dashboard Preview](https://openrsvp.korex.ovh/main-screen.webp)
 
 OpenRSVP is a modern, privacy-first alternative to expensive SaaS wedding and event planners. By deploying this Docker image on your own server (DigitalOcean, AWS, Hetzner, etc.), you retain 100% control over your guests' data.
 
@@ -41,6 +41,7 @@ OpenRSVP relies on a few free external services for database hosting, rate limit
 4. **Storage (Images):**
    - Configure your S3 credentials (we recommend free Cloudflare R2 or standard AWS S3).
 
+
 ### 3. Spin up the Containers
 Run the following command to build the image and start the web server alongside Caddy:
 ```bash
@@ -77,7 +78,7 @@ docker-compose -f docker-compose.local.yml exec rsvp-web-local bunx prisma db pu
 OpenRSVP is completely free to self-host. By default, it operates on the **Basic Tier** (1 workspace, 2 events, 50 guests).
 
 To unlock higher limits (Registered Tier) for free, you simply need to generate a License Key:
-1. Visit the [OpenRSVP License Validator Hub](https://licence-validator.korex.ovh).
+1. Visit the [OpenRSVP License Validator Hub](https://openrsvp.korex.ovh).
 2. Click **Get your Free Key**.
 3. Copy the generated key.
 4. Log into your self-hosted OpenRSVP instance, go to **Billing**, and paste your key to instantly upgrade your instance.
