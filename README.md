@@ -1,58 +1,88 @@
-# VPS Docker Deployment Guide
+# OpenRSVP Docker Deployment
 
-This directory contains everything you need to deploy the RSVP Micro-SaaS to a VPS (Virtual Private Server) like DigitalOcean, Hetzner, or AWS EC2 using Docker Compose.
+This repository contains everything you need to deploy **OpenRSVP**—the ultimate self-hosted event management and RSVP platform—using Docker.
 
-The deployment uses a **multi-stage build** with `output: "standalone"` to keep the image extremely minimal (avoiding `node_modules` bloat). It also includes **Caddy**, which automatically provisions free SSL certificates via Let's Encrypt and acts as a reverse proxy.
+OpenRSVP is a modern, privacy-first alternative to expensive SaaS wedding and event planners. By deploying this Docker image on your own server (DigitalOcean, AWS, Hetzner, etc.), you retain 100% control over your guests' data.
 
-## Prerequisites
-1. A Linux VPS with port 80 and 443 open.
-2. [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/) installed.
-3. A domain name pointed to your VPS's IP address (A Record).
+## Features Included
+- **Minimal Standalone Build:** The Dockerfile builds a Next.js `standalone` image to keep memory footprint incredibly low.
+- **Caddy Reverse Proxy:** Automatically provisions and renews free SSL/TLS certificates via Let's Encrypt.
+- **Native Prisma Database Connection:** Uses native TCP connections to seamlessly connect to Neon Postgres or any standard Postgres database.
 
-## Setup Instructions
+---
 
-### 1. Configure Caddy (Domain Name)
-Open `Caddyfile` and replace `yourdomain.com` with your actual domain.
-```caddyfile
-rsvp.example.com {
-    reverse_proxy rsvp-web:3000
-}
-```
+## 🚀 Deployment Guide (Production)
+
+Follow these steps to deploy OpenRSVP to a live server with a custom domain.
+
+### 1. Configure your Domain
+Point your domain's A-Record to your server's IP address. Then, open the `Caddyfile` and replace `yourdomain.com` with your actual domain name.
 
 ### 2. Configure Environment Variables
-Inside this `docker` folder, open the `.env` file (which is a copy of `.env.example`).
-Fill in all the required credentials (Database, BetterAuth Secret, Upstash, Plunk, etc.).
-
-*Important:* Make sure `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL`, and `BETTER_AUTH_URL` match the domain you set in your `Caddyfile` (including `https://`).
-
-### 3. Deploy the Stack
-Run the following command from inside this `docker/` directory to build the ultra-minimal standalone Next.js image and start Caddy:
-
+Rename `.env.example` to `.env`.
 ```bash
-docker compose up -d --build
+cp .env.example .env
+```
+Open `.env` and fill in your credentials. At minimum, you must provide:
+- `DATABASE_URL`: A PostgreSQL connection string (we recommend Neon or Supabase).
+- `BETTER_AUTH_SECRET`: A random 32-character string.
+- `S3_*` Variables: Cloudflare R2 or AWS S3 credentials for storing event images.
+
+### 3. Spin up the Containers
+Run the following command to build the image and start the web server alongside Caddy:
+```bash
+docker-compose up -d --build
 ```
 
-### 4. Database Migrations
-You can easily sync the Prisma schema and run migrations directly inside the running container without needing to install anything on your local host machine. Simply run:
-
+### 4. Initialize the Database
+Once the container is running, you must push the Prisma schema to your new database to create the required tables. Run this command to execute the migration inside the container:
 ```bash
-docker compose exec rsvp-web bunx prisma db push --accept-data-loss
+docker-compose exec rsvp-web bunx prisma db push
 ```
 
-## Useful Commands
+---
 
-**View Logs:**
+## 💻 Local Testing Guide
+
+If you just want to test OpenRSVP locally on your computer without setting up a domain or SSL certificates, we provide a dedicated local compose file.
+
+1. Configure your `.env` file just like above, but leave URLs as `http://localhost:3000`.
+2. Start the local stack (which bypasses Caddy and binds directly to port 3000):
 ```bash
-docker compose logs -f
+docker-compose -f docker-compose.local.yml up -d --build
+```
+3. Initialize the database:
+```bash
+docker-compose -f docker-compose.local.yml exec rsvp-web-local bunx prisma db push
+```
+4. Open `http://localhost:3000` in your browser.
+
+---
+
+## 🔑 License Keys
+
+OpenRSVP is completely free to self-host. By default, it operates on the **Basic Tier** (1 workspace, 2 events, 50 guests).
+
+To unlock higher limits (Registered Tier) for free, you simply need to generate a License Key:
+1. Visit the [OpenRSVP License Validator Hub](https://licence-validator.korex.ovh).
+2. Click **Get your Free Key**.
+3. Copy the generated key.
+4. Log into your self-hosted OpenRSVP instance, go to **Billing**, and paste your key to instantly upgrade your instance.
+
+---
+
+## 🔧 Useful Commands
+
+**View Live Logs:**
+```bash
+docker-compose logs -f
 ```
 
-**Restart the App (After updating .env):**
+**Restart After Updating `.env`:**
 ```bash
-docker compose down
-docker compose up -d
+docker-compose down
+docker-compose up -d
 ```
 
-**Rebuild the App (After pulling new code):**
-```bash
-docker compose up -d --build rsvp-web
-```
+## License
+OpenRSVP is distributed under the terms of the included EULA (`LICENSE.md`). You are permitted to self-host and modify the software for your own events, but circumventing license limits or reselling the software as a service is strictly prohibited.
