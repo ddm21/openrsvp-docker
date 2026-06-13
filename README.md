@@ -2,6 +2,8 @@
 
 This repository contains everything you need to deploy **OpenRSVP**—the ultimate self-hosted event management and RSVP platform—using Docker.
 
+![OpenRSVP Dashboard Preview](https://licence-validator.korex.ovh/main-screen.webp)
+
 OpenRSVP is a modern, privacy-first alternative to expensive SaaS wedding and event planners. By deploying this Docker image on your own server (DigitalOcean, AWS, Hetzner, etc.), you retain 100% control over your guests' data.
 
 ## Features Included
