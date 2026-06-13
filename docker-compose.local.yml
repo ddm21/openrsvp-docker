@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   rsvp-web:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
+    image: korexdotcf/openrsvp-web:latest
     container_name: rsvp-web-local
     restart: unless-stopped
     env_file:

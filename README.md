@@ -24,9 +24,20 @@ Rename `.env.example` to `.env`.
 cp .env.example .env
 ```
 Open `.env` and fill in your credentials. At minimum, you must provide:
-- `DATABASE_URL`: A PostgreSQL connection string (we recommend Neon or Supabase).
-- `BETTER_AUTH_SECRET`: A random 32-character string.
-- `S3_*` Variables: Cloudflare R2 or AWS S3 credentials for storing event images.
+
+#### Core Third-Party Services
+OpenRSVP relies on a few free external services for database hosting, rate limiting, and storage:
+
+1. **Database (Neon or Supabase):** 
+   - Create a free Postgres database at [Neon.tech](https://neon.tech) or Supabase.
+   - Copy the connection string and paste it as `DATABASE_URL`.
+2. **Rate Limiting (Upstash):**
+   - Create a free Redis database at [Upstash](https://upstash.com).
+   - Copy the REST URL and Token to `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
+3. **Authentication Secret:**
+   - Generate a random 32-character string and set it as `BETTER_AUTH_SECRET`.
+4. **Storage (Images):**
+   - Configure your S3 credentials (we recommend free Cloudflare R2 or standard AWS S3).
 
 ### 3. Spin up the Containers
 Run the following command to build the image and start the web server alongside Caddy:
