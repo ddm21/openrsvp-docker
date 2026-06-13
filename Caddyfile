@@ -1,0 +1,5 @@
+# Replace yourdomain.com with your actual domain
+# e.g., rsvp.example.com
+yourdomain.com {
+    reverse_proxy rsvp-web:3000
+}
