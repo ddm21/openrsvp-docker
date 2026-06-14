@@ -22,6 +22,9 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Install prisma to run db push at runtime
+RUN bun add prisma
+
 # Create a non-root user for security
 RUN addgroup --system --gid 1001 bunjs && \
     adduser --system --uid 1001 nextjs
@@ -34,8 +37,16 @@ COPY --from=builder --chown=nextjs:bunjs /app/.next/static ./.next/static
 
 # Copy Prisma schema so users can run `bunx prisma db push` inside the container
 COPY --from=builder --chown=nextjs:bunjs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:bunjs /app/prisma.config.ts ./
+
+# Add entrypoint script
+COPY --chown=nextjs:bunjs docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 USER nextjs
 EXPOSE 3000
 
+# Run entrypoint to push database before starting server
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 # The standalone output generates a server.js file
 CMD ["bun", "server.js"]

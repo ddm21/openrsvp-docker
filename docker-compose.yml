@@ -1,7 +1,76 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: rsvp-postgres
+    restart: unless-stopped
+    command: postgres -c max_connections=20 -c shared_buffers=256MB
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: rsvp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rsvp_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  redis:
+    image: redis:7-alpine
+    container_name: rsvp-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - rsvp_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  adminer:
+    image: adminer
+    container_name: rsvp-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - rsvp_network
+    depends_on:
+      - postgres
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: rsvp-redis-commander
+    restart: unless-stopped
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    networks:
+      - rsvp_network
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
   rsvp-web:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
     image: korexdotcf/openrsvp-web:latest
     container_name: rsvp-web
     restart: unless-stopped
@@ -13,6 +82,9 @@ services:
       - "3000"
     networks:
       - rsvp_network
+    depends_on:
+      - postgres
+      - redis
 
   caddy:
     image: caddy:2-alpine
@@ -37,3 +109,5 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  postgres_data:
+  redis_data:

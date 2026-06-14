@@ -27,18 +27,15 @@ cp .env.example .env
 ```
 Open `.env` and fill in your credentials. At minimum, you must provide:
 
-#### Core Third-Party Services
-OpenRSVP relies on a few free external services for database hosting, rate limiting, and storage:
+#### Core Configuration
+OpenRSVP runs its database entirely locally via Docker, but requires a few external services for storage and dispatch:
 
-1. **Database (Neon or Supabase):** 
-   - Create a free Postgres database at [Neon.tech](https://neon.tech) or Supabase.
-   - Copy the connection string and paste it as `DATABASE_URL`.
-2. **Rate Limiting (Upstash):**
-   - Create a free Redis database at [Upstash](https://upstash.com).
-   - Copy the REST URL and Token to `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
-3. **Authentication Secret:**
+1. **Database (Local Postgres & Redis):** 
+   - The Docker compose file automatically provisions local PostgreSQL and Redis containers, optimized for low-resource environments (e.g. 1-2GB RAM VPS).
+   - The `.env.example` already contains the correct `DATABASE_URL` and `REDIS_URL` to connect to these local containers natively. No manual database setup required!
+2. **Authentication Secret:**
    - Generate a random 32-character string and set it as `BETTER_AUTH_SECRET`.
-4. **Storage (Images):**
+3. **Storage (Images):**
    - Configure your S3 credentials (we recommend free Cloudflare R2 or standard AWS S3).
 
 
@@ -47,12 +44,7 @@ Run the following command to build the image and start the web server alongside 
 ```bash
 docker-compose up -d --build
 ```
-
-### 4. Initialize the Database
-Once the container is running, you must push the Prisma schema to your new database to create the required tables. Run this command to execute the migration inside the container:
-```bash
-docker-compose exec rsvp-web bunx prisma db push
-```
+> **Note:** The application container will automatically push the Prisma schema and initialize the database tables on startup. No manual migration is needed!
 
 ---
 
@@ -65,11 +57,49 @@ If you just want to test OpenRSVP locally on your computer without setting up a 
 ```bash
 docker-compose -f docker-compose.local.yml up -d --build
 ```
-3. Initialize the database:
-```bash
-docker-compose -f docker-compose.local.yml exec rsvp-web-local bunx prisma db push
-```
-4. Open `http://localhost:3000` in your browser.
+> **Note:** The local container will automatically initialize the database on startup.
+
+3. Open `http://localhost:3000` in your browser.
+
+---
+
+## 🛠️ Management UIs (Database & Cache)
+
+The Docker setup includes two lightweight UIs for managing your local database and cache.
+
+### Local Access
+If you are running the `docker-compose.local.yml` file on your local machine, you can access them directly via your browser:
+- **Adminer (PostgreSQL UI):** Open `http://localhost:8080`.
+  - **System:** PostgreSQL
+  - **Server:** `postgres`
+  - **Username:** `user`
+  - **Password:** `password`
+  - **Database:** `rsvp`
+- **Redis Commander (Redis UI):** Open `http://localhost:8081`. 
+
+### Production Access (VPS)
+If you are deploying on a VPS, these ports (`8080` and `8081`) are NOT exposed publicly by default for security reasons.
+
+To access them securely over the internet, you should configure **Subdomains** via the Caddy reverse proxy:
+
+1. Create A-Records for two subdomains (e.g. `db.yourdomain.com` and `redis.yourdomain.com`) pointing to your server's IP address.
+2. Open the `Caddyfile` and uncomment the subdomain configuration blocks.
+3. Replace the placeholder domains with your actual subdomains:
+   ```caddyfile
+   db.yourdomain.com {
+       reverse_proxy adminer:8080
+   }
+
+   redis.yourdomain.com {
+       reverse_proxy redis-commander:8081
+   }
+   ```
+4. Restart Caddy to apply the changes and auto-provision SSL certificates:
+   ```bash
+   docker compose down
+   docker compose up -d
+   ```
+5. You can now access Adminer and Redis Commander securely via `https://db.yourdomain.com` and `https://redis.yourdomain.com`.
 
 ---
 

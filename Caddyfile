@@ -3,3 +3,13 @@
 yourdomain.com {
     reverse_proxy rsvp-web:3000
 }
+
+# Optional: Set up subdomains for Database and Cache Management UIs
+# Make sure to point db.yourdomain.com and redis.yourdomain.com to your server IP
+# db.yourdomain.com {
+#     reverse_proxy adminer:8080
+# }
+# 
+# redis.yourdomain.com {
+#     reverse_proxy redis-commander:8081
+# }
