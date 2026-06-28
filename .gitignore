@@ -1,0 +1,8 @@
+# Environment Variables
+.env
+.env.local
+.env.*
+!.env.example
+
+# We use the pre-built Docker Hub image now
+Dockerfile
